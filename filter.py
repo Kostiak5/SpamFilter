@@ -29,11 +29,10 @@ class MyFilter():
         self.train_files = self.corpus.emails()
         counter = 0
         for file in self.train_files:
-            file_parts = file.split("\n\n")
             (header, contents) = self.split_header_and_contents(file)
             counter += 1
-            if counter == 5:
-                break
+
+        print(counter)
         return
 
     #def test():
