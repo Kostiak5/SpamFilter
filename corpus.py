@@ -11,7 +11,6 @@ class Corpus():
                 file_path = os.path.join(self.path, file)
                 open_file = open(file_path, "r", encoding='utf-8')
                 file_content = open_file.read()
-                print(file_content)
                 yield(file_content)
                 open_file.close()
         
