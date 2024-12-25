@@ -12,74 +12,15 @@ class MyFilter():
     def __init__(self):
         self.corpus = None
         self.train_files = None
-        self.spam_files_num = 0
-        self.ham_files_num = 0
         self.train_spam_words = defaultdict(int)
         self.train_ham_words = defaultdict(int)
         self.spam_words_num = 0
         self.ham_words_num = 0
 
-    def split_header_and_contents(self, file):
-        header = []
-        contents = []
-        header_ended = False
-        file_lines = file.split('\n')
-        
-        for line in file_lines:
-            if header_ended == False and line == '':
-                header_ended = True
-            elif header_ended == True:
-                contents.append(line)
-            else:
-                header.append(line)
-        #print(contents)        
-        return (header, contents)
-
-    def get_truth_data(self, train_corpus_dir): # open truth file and add a SPAM/HAM tag to each record in train_files
-        truth_file = open(os.path.join(train_corpus_dir, '!truth.txt'), 'r', encoding='utf-8')
-        for line in truth_file:
-            split_line = line.split()
-            if split_line[1] == 'SPAM':
-                self.train_files[split_line[0]][1] = True
-            else:
-                self.train_files[split_line[0]][1] = False
-        pass
-                
-    def gather_used_words(self, text, is_spam): # process used words and put them into ham/spam words dictionaries
-        for line in text:
-            for word in line.split():
-                word = word.lower()
-                word = word.translate(str.maketrans('', '',string.punctuation))
-                if len(word) <= MAX_WORD_LENGTH and is_spam == True: # if word length is above MAX_WORD_LENGTH, it's more likely to be a link which is, however, mostly unique and therefore useless for filter training
-                    self.train_spam_words[word] += 1
-                    self.spam_words_num += 1
-                elif len(word) <= MAX_WORD_LENGTH and is_spam == False:
-                    self.train_ham_words[word] += 1
-                    self.ham_words_num += 1
-
     def train(self, train_corpus_dir):
         self.corpus = TrainingCorpus(train_corpus_dir, MAX_WORD_LENGTH)
-        self.train_files = self.corpus.emails() # train_files[i][0] -> name of the email file, train_file[i][1] -> contents of the email file
-        counter = 0
-
-        (self.spam_words, self.ham_words, self.spam_files_num, self.ham_files_num) = self.corpus.create_train_dictionaries()
-        '''
-        self.get_truth_data(train_corpus_dir)
-        for file in self.train_files.values():
-            (header, contents) = self.split_header_and_contents(file[0]) # split to work with header and contents separately
-            counter += 1
-
-            self.gather_used_words(contents, file[1]) # process used words and put them into ham/spam words dictionaries
-            if file[1] == True:
-                self.spam_files_num += 1
-            else:
-                self.ham_files_num += 1
         
-        print("THE Spam")
-        print(self.train_spam_words)
-        print("THE Ham")
-        print(self.train_ham_words)
-        '''
+        (self.spam_words, self.ham_words, self.spam_files_num, self.ham_files_num) = self.corpus.create_train_dictionaries()
         return
 
     def test(self, test_corpus_dir):
