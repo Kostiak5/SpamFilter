@@ -80,11 +80,7 @@ class TrainingCorpus(Corpus):
             counter += 1
 
             self.gather_used_words(contents, file[1]) # process used words and put them into ham/spam words dictionaries
-        
-        print("THE Spam")
-        print(self.spam_words)
-        print("THE Ham")
-        print(self.ham_words)
+
         return (self.spam_words, self.ham_words, self.spam_words_num, self.ham_words_num)
     
 

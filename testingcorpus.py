@@ -1,14 +1,16 @@
 import os
 import string
+import math
 from corpus import Corpus 
 from collections import defaultdict
 IS_SPAM = True
 IS_HAM = False
 HIGH_OCCURENCE_COEFF = 0.001
-SMOOTHING_COEFF = 1.0
+SMOOTHING_COEFF = 1 # to avoid situation where spam_coeff would be multiplied to 0 
 COMMON_SPAM_WORDS = ["#1", "100% more", "100% free", "100% satisfied", "additional income", "be your own boss", "best price", "big bucks", "billion", "cash bonus", "cents on the dollar", "consolidate debt", "double your cash", "double your income", "earn extra cash", "earn money", "eliminate bad credit", "extra cash", "extra income", "expect to earn", "fast cash", "financial freedom", "free access", "free consultation", "free gift", "free hosting", "free info", "free investment", "free membership", "free money", "free preview", "free quote", "free trial", "full refund", "get out of debt", "get paid", "giveaway", "guaranteed", "increase sales", "increase traffic", "incredible deal", "lower rates", "lowest price", "make money", "million dollars", "miracle", "money back", "once in a lifetime", "one time", "pennies a day", "potential earnings", "prize", "promise", "pure profit", "risk-free", "satisfaction guaranteed", "save big money", "save up to", "special promotion", "act now", "apply now", "become a member", "call now", "click below", "click here", "get it now", "do it today", "don’t delete", "exclusive deal", "get started now", "important information regarding", "information you requested", "instant", "limited time", "new customers only", "order now", "please read", "see for yourself", "sign up free", "take action", "this won’t last", "urgent", "what are you waiting for?", "while supplies last", "will not believe your eyes", "winner", "winning", "you are a winner", "you have been selected", "bulk email", "buy direct", "cancel at any time", "check or money order", "congratulations", "confidentiality", "cures", "dear friend", "direct email", "direct marketing", "hidden charges", "human growth hormone", "internet marketing", "lose weight", "mass email", "meet singles", "multi-level marketing", "no catch", "no cost", "no credit check", "no fees", "no gimmick", "no hidden costs", "no hidden fees", "no interest", "no investment", "no obligation", "no purchase necessary", "no questions asked", "no strings attached", "not junk", "notspam", "obligation", "passwords", "requires initial investment", "social security number", "this isn’t a scam", "this isn’t junk", "this isn’t spam", "undisclosed", "unsecured credit", "unsecured debt", "unsolicited", "valium", "viagra", "vicodin", "we hate spam", "weight loss", "xanax", "accept credit cards", "ad", "all new", "as seen on", "bargain", "beneficiary", "billing", "bonus", "cards accepted", "cash", "certified", "cheap", "claims", "clearance", "compare rates", "credit card offers", "deal", "debt", "discount", "fantastic", "in accordance with laws", "income", "investment", "join millions", "lifetime", "loans", "luxury", "marketing solution", "message contains", "mortgage rates", "name brand", "offer", "online marketing", "opt in", "pre-approved", "quote", "rates", "refinance", "removal", "reserves the right", "score", "search engine", "sent in compliance", "subject to…", "terms and conditions", "trial", "unlimited", "warranty", "web traffic", "work from home"]
 # most common spam words/phrases, source: https://www.activecampaign.com/blog/spam-words
-COMMON_SUSPICIOUS_SIGNS = ['!', '#', '<', '>', '$', '€'] # anything regarding money, too many excl. signs, HTML tags
+COMMON_SUSPICIOUS_SIGNS = ['!', '#', '</', '$', '€'] # anything regarding money, too many excl. signs etc.
+HTML_TAGS = ['<html>', '<HTML>', '</html>', '</HTML'] # HTML tags are often used in spam mails
 
 class TestingCorpus(Corpus): 
     def __init__(self, corpus_dir, spam_words, ham_words, spam_words_num, ham_words_num, max_word_length):
@@ -23,20 +25,20 @@ class TestingCorpus(Corpus):
         self.max_word_length = max_word_length # set constant which determines how long a string could be to still be counted as a word
     
     def all_spam_words_coeff(self): # ratio of spam words to all words in our training set
-        return self.spam_words_num / (self.ham_words_num + self.spam_words_num)
+        return (self.spam_words_num * 1000 / (self.ham_words_num + self.spam_words_num))
     
     def all_ham_words_coeff(self): # ratio of ham words to all words in our training set
-        return self.ham_words_num / (self.ham_words_num + self.spam_words_num)
+        return (self.ham_words_num * 1000 / (self.ham_words_num + self.spam_words_num))
     
     def this_spam_word_coeff(self, this_word_occurence): 
-        return (this_word_occurence + SMOOTHING_COEFF) / (self.spam_words_num + SMOOTHING_COEFF * (self.spam_words_num + self.ham_words_num))
+        return ((this_word_occurence * 1000 + SMOOTHING_COEFF) / (self.spam_words_num + SMOOTHING_COEFF * 2))
         # this_word_occurence = how many times this word was used in training set spam mails
         # smoothing_coeff = constant, can be edited manually (value 1.0 proved to be the most effective)
         # spam_words_num = number of all spam words in training set
         # ham_words_num = number of all ham words in training set
     
     def this_ham_word_coeff(self, this_word_occurence):
-        return (this_word_occurence + SMOOTHING_COEFF) / (self.ham_words_num + SMOOTHING_COEFF * (self.spam_words_num + self.ham_words_num))
+        return ((this_word_occurence * 1000 + SMOOTHING_COEFF) / (self.ham_words_num + SMOOTHING_COEFF * 2))
         # this_word_occurence = how many times this word was used in training set ham mails
         # smoothing_coeff = constant, can be edited manually (value 1.0 proved to be the most effective)
         # spam_words_num = number of all spam words in training set
@@ -64,30 +66,40 @@ class TestingCorpus(Corpus):
                 
         return (spam_score, ham_score)
 
-    def check_uppercase(self, word):
+    def check_uppercase(self, word, score):
         if word.isupper() == True:
-            self.spam_score += 3
+            return (score + 1)
+
+        return score
     
-    def check_suspicious_signs_word(self, word):
+    def check_suspicious_signs_word(self, word, score):
         for sign in COMMON_SUSPICIOUS_SIGNS:
             if word.count(sign) >= 2:
-                self.spam_score += 1
+                score += 1
+        
+        return score
 
-    def check_suspicious_signs_text(self, text):
+    def check_suspicious_signs_text(self, text, score):
         for sign in COMMON_SUSPICIOUS_SIGNS:
             if text.count(sign) >= 5:
-                self.spam_score += 8
+                score += 1
+        
+        for tag in HTML_TAGS:
+            if text.count(tag) >= 1:
+                score += 20
+        
+        return score
     
-    def check_standard_spam_words(self, word):
+    def check_standard_spam_words(self, word, score):
         if word in COMMON_SPAM_WORDS:
-            self.spam_score += 8
+            print(word)
+            score += 5
+
+        return score
     
     def analyze_used_words(self, text):
-        '''
-        message: a string
-        '''
-        spam_coeff = self.spam_words_coeff()
-        ham_coeff = self.ham_words_coeff()
+        spam_coeff = self.all_spam_words_coeff()
+        ham_coeff = self.all_ham_words_coeff()
 
         for line in text:
             for word in line.split():
@@ -95,6 +107,7 @@ class TestingCorpus(Corpus):
                     continue
 
                 if word in self.spam_words:
+                    ###print(word + ' is in spam!!!' + str(self.this_spam_word_coeff(self.spam_words[word])))
                     spam_coeff *= self.this_spam_word_coeff(self.spam_words[word])
 
                 if word in self.ham_words:
@@ -103,23 +116,36 @@ class TestingCorpus(Corpus):
         print('P(Spam|message):', spam_coeff)
         print('P(Ham|message):', ham_coeff)
 
-        if ham_coeff > spam_coeff:
-            print('Label: Ham')
-        elif ham_coeff < spam_coeff:
-            print('Label: Spam')
-        else:
-            print('Equal proabilities, have a human classify this!')
+        print('P(Ham|Spam):', (spam_coeff / (spam_coeff + ham_coeff)))
+    
+    def add_to_spam_score(self, score):
+        if score >= 12: # if there are enough points in this score category, it raises the suspicion that this email is a spam
+            self.spam_score += score
 
     def analyze_contents_format(self, text):
+        # define 3 score categories: score for uppercase words, identified standard spam words and suspicious signs
+        uppercase_score = 0
+        standard_spam_words_score = 0
+        suspicious_signs_score = 0
+
         for line in text:
             for word in line.split():
                 if len(word) > self.max_word_length:
                     continue
-                self.check_standard_spam_words(word)
-                self.check_uppercase(word) # increase spam score in case there are full uppercase words
-                self.check_suspicious_signs_word(word)
+                standard_spam_words_score = self.check_standard_spam_words(word, standard_spam_words_score)
+                uppercase_score = self.check_uppercase(word, uppercase_score) # increase score in case there are full uppercase words
+                suspicious_signs_score = self.check_suspicious_signs_word(word, suspicious_signs_score)
         
-        self.check_suspicious_signs_text(text)
+        suspicious_signs_score += self.check_suspicious_signs_text(text, suspicious_signs_score)
+
+        # evaluate whether score is enough to label it as a spam sign
+        self.add_to_spam_score(standard_spam_words_score)
+        self.add_to_spam_score(uppercase_score)
+        self.add_to_spam_score(suspicious_signs_score)
+        
+        print(f'spam score: {self.spam_score}')
+        print(f'ham score: {self.ham_score}')
+
 
     
     def test_mail(self, file_name):
