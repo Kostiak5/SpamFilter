@@ -1,4 +1,5 @@
 import os
+import string
 
 class Corpus():
     def __init__(self, corpus_dir):
@@ -16,6 +17,11 @@ class Corpus():
                 open_file.close()
         
         return email_dict
+    
+    def normalize_word(self, word): # lower case and remove punctuation
+        word = word.lower()
+        word = word.translate(str.maketrans('', '',string.punctuation))
+        return word
 
     def split_header_and_contents(self, file):
         header = []

@@ -30,7 +30,7 @@ class TrainingCorpus(Corpus):
                 self.train_files[split_line[0]][1] = IS_HAM
         return
     """
-    
+
     def split_header_and_contents(self, file):
         header = []
         contents = []
@@ -55,18 +55,21 @@ class TrainingCorpus(Corpus):
                 self.train_files[split_line[0]][1] = IS_SPAM
             else:
                 self.train_files[split_line[0]][1] = IS_HAM
+    
+    def add_word_to_dict(self, word, is_spam):
+        if len(word) <= self.max_word_length and is_spam == True: # if word length is above MAX_WORD_LENGTH, it's more likely to be a link which is, however, mostly unique and therefore useless for filter training
+            self.spam_words[word] += 1
+            self.spam_words_num += 1
+        elif len(word) <= self.max_word_length and is_spam == False:
+            self.ham_words[word] += 1
+            self.ham_words_num += 1
                 
     def gather_used_words(self, text, is_spam): # process used words and put them into ham/spam words dictionaries
         for line in text:
             for word in line.split():
-                word = word.lower()
-                word = word.translate(str.maketrans('', '',string.punctuation))
-                if len(word) <= self.max_word_length and is_spam == True: # if word length is above MAX_WORD_LENGTH, it's more likely to be a link which is, however, mostly unique and therefore useless for filter training
-                    self.spam_words[word] += 1
-                    self.spam_words_num += 1
-                elif len(word) <= self.max_word_length and is_spam == False:
-                    self.ham_words[word] += 1
-                    self.ham_words_num += 1
+                word = self.normalize_word(word) 
+                self.add_word_to_dict(word, is_spam)
+                
 
     def create_train_dictionaries(self):
         counter = 0
