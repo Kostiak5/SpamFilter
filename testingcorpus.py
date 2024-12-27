@@ -107,16 +107,31 @@ class TestingCorpus(Corpus):
                     continue
 
                 if word in self.spam_words:
-                    ###print(word + ' is in spam!!!' + str(self.this_spam_word_coeff(self.spam_words[word])))
+                    prev_spam_coeff = spam_coeff
                     spam_coeff *= self.this_spam_word_coeff(self.spam_words[word])
 
                 if word in self.ham_words:
+                    prev_ham_coeff = spam_coeff
                     ham_coeff *= self.this_ham_word_coeff(self.ham_words[word])
+                
+                if spam_coeff == math.inf and ham_coeff == math.inf:
+                    spam_coeff = prev_spam_coeff
+                    ham_coeff = prev_ham_coeff
+                    break
+                elif spam_coeff == math.inf:
+                    spam_coeff = prev_spam_coeff
+                    break
+                elif ham_coeff == math.inf:
+                    ham_coeff = prev_ham_coeff
+                    break
 
-        print('P(Spam|message):', spam_coeff)
-        print('P(Ham|message):', ham_coeff)
-
-        print('P(Ham|Spam):', (spam_coeff / (spam_coeff + ham_coeff)))
+        if abs(spam_coeff - ham_coeff) > 1e10:
+            if spam_coeff > ham_coeff:
+                return IS_SPAM
+            else:
+                return IS_HAM
+        else:
+            return None
     
     def add_to_spam_score(self, score):
         if score >= 12: # if there are enough points in this score category, it raises the suspicion that this email is a spam
