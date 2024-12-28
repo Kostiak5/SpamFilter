@@ -27,20 +27,20 @@ class TestingCorpus(Corpus):
         self.ham_files_num = ham_files_num
 
     def all_spam_words_coeff(self): # ratio of spam words to all words in our training set
-        return ((self.spam_words_num) / (self.ham_words_num + self.spam_words_num))
+        return ((self.spam_files_num) / (self.ham_files_num + self.spam_files_num))
     
     def all_ham_words_coeff(self): # ratio of ham words to all words in our training set
-        return (self.ham_words_num / (self.ham_words_num + self.spam_words_num))
+        return (self.ham_files_num / (self.ham_files_num + self.spam_files_num))
     
     def this_spam_word_coeff(self, this_word_occurence): 
-        return ((this_word_occurence * 1000 + SMOOTHING_COEFF) / (self.spam_words_num + SMOOTHING_COEFF * self.spam_words_num))
+        return ((this_word_occurence * 1000 + SMOOTHING_COEFF) / (self.spam_words_num + SMOOTHING_COEFF * 2))
         # this_word_occurence = how many times this word was used in training set spam mails
         # smoothing_coeff = constant, can be edited manually (value 1.0 proved to be the most effective)
         # spam_words_num = number of all spam words in training set
         # ham_words_num = number of all ham words in training set
     
     def this_ham_word_coeff(self, this_word_occurence):
-        return ((this_word_occurence * 1000 + SMOOTHING_COEFF) / (self.ham_words_num + SMOOTHING_COEFF * self.ham_words_num))
+        return ((this_word_occurence * 1000 + SMOOTHING_COEFF) / (self.ham_words_num + SMOOTHING_COEFF * 2))
         # this_word_occurence = how many times this word was used in training set ham mails
         # smoothing_coeff = constant, can be edited manually (value 1.0 proved to be the most effective)
         # spam_words_num = number of all spam words in training set
@@ -118,7 +118,8 @@ class TestingCorpus(Corpus):
             else:
                 return IS_HAM
         else:
-            return None
+            print('ndecided', spam_coeff, ham_coeff)
+            return IS_HAM
     
     def add_to_spam_score(self, score):
         if score >= 15: # if there are enough points in this score category, it raises the suspicion that this email is a spam
@@ -157,8 +158,8 @@ class TestingCorpus(Corpus):
             elif used_words_indicator == IS_HAM:
                 return IS_HAM
             # else: continue (the difference is too small)
-
-        #print(self.spam_score)
+        
+        print(file_name)
         if self.spam_score >= 50:
             return IS_SPAM
         else:

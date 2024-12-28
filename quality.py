@@ -20,4 +20,4 @@ def compute_quality_for_corpus(corpus_dir):
     score = quality_score(cm_dict['tp'], cm_dict['tn'], cm_dict['fp'], cm_dict['fn'])
     return score
 
-print(compute_quality_for_corpus('data/2'))
+print(compute_quality_for_corpus('data/1'))
