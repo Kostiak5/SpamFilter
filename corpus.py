@@ -1,5 +1,6 @@
 import os
 import string
+import email
 
 class Corpus():
     def __init__(self, corpus_dir):
@@ -23,19 +24,19 @@ class Corpus():
         word = word.translate(str.maketrans('', '',string.punctuation))
         return word
 
-    def split_header_and_contents(self, file):
+    def split_header_and_contents(self, file): # split header of an email and contents of it into two separate lists
         header = []
         contents = []
         header_ended = False
         file_lines = file.split('\n')
-        
         for line in file_lines:
             if header_ended == False and line == '':
                 header_ended = True
-            elif header_ended == True:
-                contents.append(line)
-            else:
-                header.append(line)
-        #print(contents)        
+            elif header_ended == True and line != '':
+                contents.extend(line.split())
+            elif line != '':
+                header.extend(line.split())
+        #print(contents)      
+        
         return (header, contents)
 
