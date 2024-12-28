@@ -35,7 +35,7 @@ class Corpus():
             elif header_ended == True and line != '':
                 contents.extend(line.split()) # contents -> list of words
             elif line != '':
-                header.append(line) # contents -> list of non-empty lines
+                header.append(line) # header -> list of non-empty lines
         #print(contents)      
         
         return (header, contents)

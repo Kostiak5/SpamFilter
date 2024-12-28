@@ -47,7 +47,6 @@ class TestingCorpus(Corpus):
                 score += 20
             if text.count(sign) >= 2:
                 score += 3
-
         
         for tag in HTML_TAGS:
             if text.count(tag) >= 1:
@@ -62,10 +61,10 @@ class TestingCorpus(Corpus):
         return score
     
     # ANALYZE WITH TRAINING
-    def all_spam_words_coeff(self): # ratio of spam words to all words in our training set
+    def all_spam_files_coeff(self): # ratio of spam words to all words in our training set
         return ((self.spam_files_num) / (self.ham_files_num + self.spam_files_num))
     
-    def all_ham_words_coeff(self): # ratio of ham words to all words in our training set
+    def all_ham_files_coeff(self): # ratio of ham words to all words in our training set
         return (self.ham_files_num / (self.ham_files_num + self.spam_files_num))
     
     def this_spam_word_coeff(self, this_word_occurence): 
@@ -83,8 +82,8 @@ class TestingCorpus(Corpus):
         # ham_words_num = number of all ham words in training set
     
     def analyze_used_words(self, text):
-        spam_coeff = self.all_spam_words_coeff()
-        ham_coeff = self.all_ham_words_coeff()
+        spam_coeff = self.all_spam_files_coeff()
+        ham_coeff = self.all_ham_files_coeff()
 
         for word in text:
             if len(word) > self.max_word_length:
@@ -98,6 +97,7 @@ class TestingCorpus(Corpus):
                 spam_coeff *= self.this_spam_word_coeff(self.spam_words[word])
             else:
                 spam_coeff *= self.this_spam_word_coeff(0)
+
 
             prev_ham_coeff = ham_coeff
             if word in self.ham_words:
@@ -113,13 +113,11 @@ class TestingCorpus(Corpus):
                 spam_coeff *= 1000000 # to prevent underflow (rounding to 0.0)
                 ham_coeff *= 1000000
         
-        if abs(spam_coeff - ham_coeff) > 0:
-            if spam_coeff > ham_coeff:
-                return IS_SPAM
-            else:
-                return IS_HAM
+        if spam_coeff > ham_coeff:
+            return IS_SPAM
         else:
             return IS_HAM
+
     
     def add_to_spam_score(self, score):
         if score >= 15: # if there are enough points in this score category, it raises the suspicion that this email is a spam
