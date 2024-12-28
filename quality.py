@@ -4,6 +4,10 @@ from utils import read_classification_from_file
 
 def quality_score(tp, tn, fp, fn):
     q = (tp + tn) / (tp + tn + 10*fp + fn)
+    print('spam identified correctly:', tp)
+    print('spam identified as ok:', tn)
+    print('ok identified as spam (the worst case):', fp)
+    print('ok identified correctly:', fn)
     return q
 
 def compute_quality_for_corpus(corpus_dir):
@@ -20,4 +24,4 @@ def compute_quality_for_corpus(corpus_dir):
     score = quality_score(cm_dict['tp'], cm_dict['tn'], cm_dict['fp'], cm_dict['fn'])
     return score
 
-print(compute_quality_for_corpus('data/1'))
+print('overall score:', compute_quality_for_corpus('data/2'))

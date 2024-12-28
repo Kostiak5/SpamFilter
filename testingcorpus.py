@@ -103,16 +103,12 @@ class TestingCorpus(Corpus):
             else:
                 ham_coeff *= self.this_ham_word_coeff(0)
             
-            if (spam_coeff == math.inf and ham_coeff == math.inf) or (spam_coeff == 0.0 and ham_coeff == 0.0):
-                spam_coeff = prev_spam_coeff
-                ham_coeff = prev_ham_coeff
-                break
-            elif spam_coeff == math.inf or ham_coeff == 0.0:
-                spam_coeff = prev_spam_coeff
-                break
-            elif ham_coeff == math.inf or ham_coeff == 0.0:
-                ham_coeff = prev_ham_coeff
-                break
+            if spam_coeff == 0.0 or ham_coeff == 0.0:
+                spam_coeff = prev_spam_coeff * 1000000
+                ham_coeff = prev_ham_coeff * 1000000
+            elif spam_coeff < 1e-100 or ham_coeff < 1e-100:
+                spam_coeff *= 1000000
+                ham_coeff *= 1000000
         
         if abs(spam_coeff - ham_coeff) > 0:
             if spam_coeff > ham_coeff:

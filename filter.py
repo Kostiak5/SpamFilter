@@ -62,5 +62,5 @@ class MyFilter():
         """
             
 x = MyFilter()
-x.train('data/2')
-x.test('data/1')
+x.train('data/1')
+x.test('data/2')
