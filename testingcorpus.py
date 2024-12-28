@@ -26,26 +26,8 @@ class TestingCorpus(Corpus):
         self.spam_files_num = spam_files_num
         self.ham_files_num = ham_files_num
 
-    def all_spam_words_coeff(self): # ratio of spam words to all words in our training set
-        return ((self.spam_files_num) / (self.ham_files_num + self.spam_files_num))
-    
-    def all_ham_words_coeff(self): # ratio of ham words to all words in our training set
-        return (self.ham_files_num / (self.ham_files_num + self.spam_files_num))
-    
-    def this_spam_word_coeff(self, this_word_occurence): 
-        return ((this_word_occurence * 1000 + SMOOTHING_COEFF) / (self.spam_words_num + SMOOTHING_COEFF * 2))
-        # this_word_occurence = how many times this word was used in training set spam mails
-        # smoothing_coeff = constant, can be edited manually (value 1.0 proved to be the most effective)
-        # spam_words_num = number of all spam words in training set
-        # ham_words_num = number of all ham words in training set
-    
-    def this_ham_word_coeff(self, this_word_occurence):
-        return ((this_word_occurence * 1000 + SMOOTHING_COEFF) / (self.ham_words_num + SMOOTHING_COEFF * 2))
-        # this_word_occurence = how many times this word was used in training set ham mails
-        # smoothing_coeff = constant, can be edited manually (value 1.0 proved to be the most effective)
-        # spam_words_num = number of all spam words in training set
-        # ham_words_num = number of all ham words in training set
 
+    # ANALYZE WITHOUT TRAINING
     def check_uppercase(self, word, score):
         if word.isupper() == True:
             return (score + 1)
@@ -79,6 +61,27 @@ class TestingCorpus(Corpus):
 
         return score
     
+    # ANALYZE WITH TRAINING
+    def all_spam_words_coeff(self): # ratio of spam words to all words in our training set
+        return ((self.spam_files_num) / (self.ham_files_num + self.spam_files_num))
+    
+    def all_ham_words_coeff(self): # ratio of ham words to all words in our training set
+        return (self.ham_files_num / (self.ham_files_num + self.spam_files_num))
+    
+    def this_spam_word_coeff(self, this_word_occurence): 
+        return ((this_word_occurence * 1000 + SMOOTHING_COEFF) / (self.spam_words_num + SMOOTHING_COEFF * 2))
+        # this_word_occurence = how many times this word was used in training set spam mails
+        # smoothing_coeff = constant, can be edited manually (value 1.0 proved to be the most effective)
+        # spam_words_num = number of all spam words in training set
+        # ham_words_num = number of all ham words in training set
+    
+    def this_ham_word_coeff(self, this_word_occurence):
+        return ((this_word_occurence * 1000 + SMOOTHING_COEFF) / (self.ham_words_num + SMOOTHING_COEFF * 2))
+        # this_word_occurence = how many times this word was used in training set ham mails
+        # smoothing_coeff = constant, can be edited manually (value 1.0 proved to be the most effective)
+        # spam_words_num = number of all spam words in training set
+        # ham_words_num = number of all ham words in training set
+    
     def analyze_used_words(self, text):
         spam_coeff = self.all_spam_words_coeff()
         ham_coeff = self.all_ham_words_coeff()
@@ -104,10 +107,10 @@ class TestingCorpus(Corpus):
                 ham_coeff *= self.this_ham_word_coeff(0)
             
             if spam_coeff == 0.0 or ham_coeff == 0.0:
-                spam_coeff = prev_spam_coeff * 1000000
+                spam_coeff = prev_spam_coeff * 1000000 # if underflow (rounding to 0.0) happened, return to previous value
                 ham_coeff = prev_ham_coeff * 1000000
-            elif spam_coeff < 1e-100 or ham_coeff < 1e-100:
-                spam_coeff *= 1000000
+            if spam_coeff < 1e-100 or ham_coeff < 1e-100:
+                spam_coeff *= 1000000 # to prevent underflow (rounding to 0.0)
                 ham_coeff *= 1000000
         
         if abs(spam_coeff - ham_coeff) > 0:
@@ -116,7 +119,6 @@ class TestingCorpus(Corpus):
             else:
                 return IS_HAM
         else:
-            print('ndecided', spam_coeff, ham_coeff)
             return IS_HAM
     
     def add_to_spam_score(self, score):
