@@ -87,6 +87,8 @@ class TestingCorpus(Corpus):
             if len(word) > self.max_word_length:
                 continue
             
+            #print(spam_coeff)
+            #print(ham_coeff)
             prev_spam_coeff = spam_coeff
             if word in self.spam_words:
                 #print('S', word, self.spam_words[word], spam_coeff, self.this_spam_word_coeff(self.spam_words[word]))
@@ -94,14 +96,14 @@ class TestingCorpus(Corpus):
             else:
                 spam_coeff *= self.this_spam_word_coeff(0)
 
-            prev_ham_coeff = spam_coeff
+            prev_ham_coeff = ham_coeff
             if word in self.ham_words:
                 #print('H', word, self.ham_words[word], ham_coeff, self.this_ham_word_coeff(self.ham_words[word]))   
                 ham_coeff *= self.this_ham_word_coeff(self.ham_words[word])
             else:
                 ham_coeff *= self.this_ham_word_coeff(0)
             
-            if (spam_coeff == math.inf and ham_coeff == math.inf) or (spam_coeff == math.inf and ham_coeff == 0.0):
+            if (spam_coeff == math.inf and ham_coeff == math.inf) or (spam_coeff == 0.0 and ham_coeff == 0.0):
                 spam_coeff = prev_spam_coeff
                 ham_coeff = prev_ham_coeff
                 break
@@ -149,7 +151,6 @@ class TestingCorpus(Corpus):
         self.spam_score = 0
         self.ham_score = 0
         (header, contents) = self.split_header_and_contents(self.test_files[file_name][0])
-        self.analyze_contents_format(contents)
         used_words_indicator = False
         if self.spam_words_num != 0 and self.ham_words_num != 0:
             used_words_indicator = self.analyze_used_words(contents)
@@ -159,6 +160,7 @@ class TestingCorpus(Corpus):
                 return IS_HAM
             # else: continue (the difference is too small)
         
+        self.analyze_contents_format(contents)
         print(file_name)
         if self.spam_score >= 50:
             return IS_SPAM
