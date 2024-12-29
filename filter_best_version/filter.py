@@ -12,12 +12,12 @@ class MyFilter():
     def __init__(self):
         self.corpus = None
         self.train_files = None
+        self.train_spam_words = defaultdict(int)
+        self.train_ham_words = defaultdict(int)
         self.spam_words_num = 0
         self.ham_words_num = 0
         self.spam_files_num = 0
         self.ham_files_num = 0
-        self.spam_words = None
-        self.ham_words = None
 
     def train(self, train_corpus_dir):
         self.corpus = TrainingCorpus(train_corpus_dir, MAX_WORD_LENGTH)
@@ -41,3 +41,7 @@ class MyFilter():
                 prediction_file.write(f'{file_name} OK\n')
 
         prediction_file.close()
+            
+x = MyFilter()
+x.train('data/1')
+x.test('data/2')
